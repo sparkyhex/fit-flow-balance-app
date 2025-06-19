@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Plus, Target, Activity, Apple, Droplets, Trophy, Flame, Calendar, Trend
 import WorkoutModal from "@/components/WorkoutModal";
 import MealModal from "@/components/MealModal";
 import History from "@/components/History";
+import CalorieTargetEditor from "@/components/CalorieTargetEditor";
 import { toast } from "@/hooks/use-toast";
 import { useHistory } from "@/contexts/HistoryContext";
 
@@ -16,7 +16,7 @@ const Index = () => {
   const [mealModalOpen, setMealModalOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   
-  const { currentDay, addWorkout, addMeal, addWater } = useHistory();
+  const { currentDay, addWorkout, addMeal, addWater, updateCalorieTarget } = useHistory();
 
   // Enhanced stats with streaks and achievements
   const [achievements] = useState([
@@ -143,7 +143,7 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Enhanced Daily Overview Card */}
+        {/* Enhanced Daily Overview Card with Editable Calorie Target */}
         <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -170,15 +170,11 @@ const Index = () => {
               </div>
             </div>
             
-            <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-              <div className="text-3xl font-bold text-blue-600">
-                {remainingCalories > 0 ? remainingCalories : 0}
-              </div>
-              <div className="text-sm text-gray-600">Calories Remaining</div>
-              {remainingCalories <= 0 && (
-                <Badge className="mt-2 bg-green-500">Goal Achieved! 🎉</Badge>
-              )}
-            </div>
+            <CalorieTargetEditor
+              currentTarget={currentDay.calorieTarget}
+              onTargetUpdate={updateCalorieTarget}
+              remainingCalories={remainingCalories}
+            />
             
             <div className="space-y-3">
               <div className="flex justify-between text-sm">

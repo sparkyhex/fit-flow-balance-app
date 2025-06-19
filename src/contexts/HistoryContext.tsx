@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface DayData {
@@ -21,6 +20,7 @@ export interface HistoryContextType {
   addWorkout: (workout: { type: string; duration: number; calories: number }) => void;
   addMeal: (meal: { name: string; calories: number; mealType: string }) => void;
   addWater: () => void;
+  updateCalorieTarget: (newTarget: number) => void;
 }
 
 const HistoryContext = createContext<HistoryContextType | undefined>(undefined);
@@ -112,6 +112,13 @@ export const HistoryProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const updateCalorieTarget = (newTarget: number) => {
+    setCurrentDay(prev => ({
+      ...prev,
+      calorieTarget: newTarget
+    }));
+  };
+
   return (
     <HistoryContext.Provider value={{
       currentDay,
@@ -119,7 +126,8 @@ export const HistoryProvider = ({ children }: { children: ReactNode }) => {
       updateCurrentDay,
       addWorkout,
       addMeal,
-      addWater
+      addWater,
+      updateCalorieTarget
     }}>
       {children}
     </HistoryContext.Provider>
