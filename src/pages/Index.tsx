@@ -4,29 +4,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Target, Activity, Apple, Droplets, Trophy, Flame, Calendar, TrendingUp } from "lucide-react";
+import { Plus, Target, Activity, Apple, Droplets, Trophy, Flame, Calendar, TrendingUp, History as HistoryIcon } from "lucide-react";
 import WorkoutModal from "@/components/WorkoutModal";
 import MealModal from "@/components/MealModal";
+import History from "@/components/History";
 import { toast } from "@/hooks/use-toast";
+import { useHistory } from "@/contexts/HistoryContext";
 
 const Index = () => {
   const [workoutModalOpen, setWorkoutModalOpen] = useState(false);
   const [mealModalOpen, setMealModalOpen] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   
-  // Enhanced stats with streaks and achievements
-  const [dailyStats, setDailyStats] = useState({
-    caloriesConsumed: 1650,
-    caloriesBurned: 450,
-    calorieTarget: 2200,
-    waterIntake: 6,
-    waterTarget: 8,
-    workoutsToday: 2,
-    mealsLogged: 3,
-    streak: 7,
-    level: 3,
-    weeklyGoalProgress: 5 // out of 7 days
-  });
+  const { currentDay, addWorkout, addMeal, addWater } = useHistory();
 
+  // Enhanced stats with streaks and achievements
   const [achievements] = useState([
     { id: 1, name: "First Workout", description: "Complete your first workout", unlocked: true, icon: "🏆" },
     { id: 2, name: "Water Warrior", description: "Drink 8 glasses of water", unlocked: false, icon: "💧" },
@@ -34,10 +26,14 @@ const Index = () => {
     { id: 4, name: "Calorie Counter", description: "Log 10 meals", unlocked: true, icon: "📱" }
   ]);
 
-  const remainingCalories = dailyStats.calorieTarget - dailyStats.caloriesConsumed + dailyStats.caloriesBurned;
-  const calorieProgress = Math.min((dailyStats.caloriesConsumed / dailyStats.calorieTarget) * 100, 100);
-  const waterProgress = (dailyStats.waterIntake / dailyStats.waterTarget) * 100;
-  const weeklyProgress = (dailyStats.weeklyGoalProgress / 7) * 100;
+  const remainingCalories = currentDay.calorieTarget - currentDay.caloriesConsumed + currentDay.caloriesBurned;
+  const calorieProgress = Math.min((currentDay.caloriesConsumed / currentDay.calorieTarget) * 100, 100);
+  const waterProgress = (currentDay.waterIntake / currentDay.waterTarget) * 100;
+  
+  // Static values for demo - in real app these would come from history analysis
+  const weeklyProgress = 71; // 5 out of 7 days
+  const streak = 7;
+  const level = 3;
 
   // Motivational messages based on progress
   const getMotivationalMessage = () => {
@@ -47,37 +43,29 @@ const Index = () => {
     return "Let's get started on your fitness journey! 🚀";
   };
 
-  const handleWorkoutLogged = (calories: number) => {
-    setDailyStats(prev => ({
-      ...prev,
-      caloriesBurned: prev.caloriesBurned + calories,
-      workoutsToday: prev.workoutsToday + 1
-    }));
+  const handleWorkoutLogged = (type: string, duration: number, calories: number) => {
+    addWorkout({ type, duration, calories });
     
     toast({
       title: "Workout Logged! 🔥",
-      description: `Great job! You burned ${calories} calories.`,
+      description: `Great job! You burned ${calories} calories with ${type}.`,
     });
   };
 
-  const handleMealLogged = (calories: number) => {
-    setDailyStats(prev => ({
-      ...prev,
-      caloriesConsumed: prev.caloriesConsumed + calories,
-      mealsLogged: prev.mealsLogged + 1
-    }));
+  const handleMealLogged = (name: string, calories: number, mealType: string) => {
+    addMeal({ name, calories, mealType });
     
     toast({
       title: "Meal Logged! 🍎",
-      description: `Added ${calories} calories to your daily intake.`,
+      description: `Added ${name} (${calories} calories) to your ${mealType}.`,
     });
   };
 
   const handleWaterAdded = () => {
-    if (dailyStats.waterIntake < dailyStats.waterTarget) {
-      setDailyStats(prev => ({ ...prev, waterIntake: prev.waterIntake + 1 }));
+    if (currentDay.waterIntake < currentDay.waterTarget) {
+      addWater();
       
-      if (dailyStats.waterIntake + 1 === dailyStats.waterTarget) {
+      if (currentDay.waterIntake + 1 === currentDay.waterTarget) {
         toast({
           title: "Hydration Goal Achieved! 💧",
           description: "You've reached your daily water intake goal!",
@@ -85,6 +73,37 @@ const Index = () => {
       }
     }
   };
+
+  if (showHistory) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 p-4">
+        <div className="max-w-md mx-auto space-y-6">
+          {/* Header with back button */}
+          <div className="text-center py-6">
+            <div className="flex items-center justify-between mb-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowHistory(false)}
+                className="bg-white/90"
+              >
+                ← Back
+              </Button>
+              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                Level {level}
+              </Badge>
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              Your Journey
+            </h1>
+            <p className="text-gray-600">Track your progress over time</p>
+          </div>
+
+          <History />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 p-4">
@@ -96,19 +115,24 @@ const Index = () => {
               FitCal
             </h1>
             <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-              Level {dailyStats.level}
+              Level {level}
             </Badge>
           </div>
           <p className="text-gray-600 mb-2">Fitness + Calorie Tracker</p>
           <div className="flex items-center justify-center gap-4 text-sm">
             <div className="flex items-center gap-1 text-orange-600">
               <Flame className="h-4 w-4" />
-              <span className="font-semibold">{dailyStats.streak} day streak</span>
+              <span className="font-semibold">{streak} day streak</span>
             </div>
-            <div className="flex items-center gap-1 text-blue-600">
-              <Calendar className="h-4 w-4" />
-              <span>{dailyStats.weeklyGoalProgress}/7 this week</span>
-            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowHistory(true)}
+              className="flex items-center gap-1 text-blue-600 hover:bg-blue-50"
+            >
+              <HistoryIcon className="h-4 w-4" />
+              <span>History</span>
+            </Button>
           </div>
         </div>
 
@@ -134,13 +158,13 @@ const Index = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600 animate-pulse">
-                  {dailyStats.caloriesConsumed}
+                  {currentDay.caloriesConsumed}
                 </div>
                 <div className="text-sm text-gray-600">Consumed</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600 animate-pulse">
-                  {dailyStats.caloriesBurned}
+                  {currentDay.caloriesBurned}
                 </div>
                 <div className="text-sm text-gray-600">Burned</div>
               </div>
@@ -202,9 +226,9 @@ const Index = () => {
           <Card className="bg-gradient-to-br from-blue-100 to-blue-50 border-blue-200 shadow-md hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-4 text-center">
               <Activity className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-              <div className="text-2xl font-bold text-blue-700">{dailyStats.workoutsToday}</div>
+              <div className="text-2xl font-bold text-blue-700">{currentDay.workoutsToday}</div>
               <div className="text-sm text-blue-600">Workouts Today</div>
-              {dailyStats.workoutsToday > 0 && (
+              {currentDay.workoutsToday > 0 && (
                 <Badge variant="outline" className="mt-1 border-blue-300 text-blue-600">
                   On Fire! 🔥
                 </Badge>
@@ -215,9 +239,9 @@ const Index = () => {
           <Card className="bg-gradient-to-br from-green-100 to-green-50 border-green-200 shadow-md hover:shadow-lg transition-shadow duration-200">
             <CardContent className="p-4 text-center">
               <Apple className="h-8 w-8 mx-auto mb-2 text-green-600" />
-              <div className="text-2xl font-bold text-green-700">{dailyStats.mealsLogged}</div>
+              <div className="text-2xl font-bold text-green-700">{currentDay.mealsLogged}</div>
               <div className="text-sm text-green-600">Meals Logged</div>
-              {dailyStats.mealsLogged >= 3 && (
+              {currentDay.mealsLogged >= 3 && (
                 <Badge variant="outline" className="mt-1 border-green-300 text-green-600">
                   Great! ✨
                 </Badge>
@@ -240,18 +264,18 @@ const Index = () => {
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
-                <span className="font-medium">{dailyStats.waterIntake} / {dailyStats.waterTarget} glasses</span>
+                <span className="font-medium">{currentDay.waterIntake} / {currentDay.waterTarget} glasses</span>
                 <span className="font-semibold text-cyan-600">{Math.round(waterProgress)}%</span>
               </div>
               <Progress value={waterProgress} className="h-3 transition-all duration-500" />
               
               {/* Water glasses visualization */}
               <div className="flex justify-center gap-1 py-2">
-                {Array.from({ length: dailyStats.waterTarget }, (_, i) => (
+                {Array.from({ length: currentDay.waterTarget }, (_, i) => (
                   <div
                     key={i}
                     className={`w-4 h-6 rounded-b-lg border-2 transition-all duration-300 ${
-                      i < dailyStats.waterIntake
+                      i < currentDay.waterIntake
                         ? 'bg-cyan-400 border-cyan-500 animate-pulse'
                         : 'bg-gray-100 border-gray-300'
                     }`}
@@ -263,11 +287,11 @@ const Index = () => {
                 variant="outline" 
                 size="sm" 
                 onClick={handleWaterAdded}
-                disabled={dailyStats.waterIntake >= dailyStats.waterTarget}
+                disabled={currentDay.waterIntake >= currentDay.waterTarget}
                 className="w-full mt-2 bg-cyan-50 hover:bg-cyan-100 border-cyan-300 text-cyan-700 transform hover:scale-105 transition-all duration-200"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                {dailyStats.waterIntake >= dailyStats.waterTarget ? "Goal Achieved! 🎉" : "Add Glass"}
+                {currentDay.waterIntake >= currentDay.waterTarget ? "Goal Achieved! 🎉" : "Add Glass"}
               </Button>
             </div>
           </CardContent>

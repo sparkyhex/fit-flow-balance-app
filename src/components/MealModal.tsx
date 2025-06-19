@@ -10,7 +10,7 @@ import { Apple, Search } from "lucide-react";
 interface MealModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onMealLogged: (calories: number) => void;
+  onMealLogged: (name: string, calories: number, mealType: string) => void;
 }
 
 const MealModal = ({ open, onOpenChange, onMealLogged }: MealModalProps) => {
@@ -44,7 +44,7 @@ const MealModal = ({ open, onOpenChange, onMealLogged }: MealModalProps) => {
   const handleLogMeal = () => {
     if (!mealType || !foodName || !calories) return;
     
-    onMealLogged(parseInt(calories));
+    onMealLogged(foodName, parseInt(calories), mealType);
     setMealType('');
     setFoodName('');
     setCalories('');

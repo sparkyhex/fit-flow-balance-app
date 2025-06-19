@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { Activity } from "lucide-react";
 interface WorkoutModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onWorkoutLogged: (calories: number) => void;
+  onWorkoutLogged: (type: string, duration: number, calories: number) => void;
 }
 
 const WorkoutModal = ({ open, onOpenChange, onWorkoutLogged }: WorkoutModalProps) => {
@@ -40,7 +39,7 @@ const WorkoutModal = ({ open, onOpenChange, onWorkoutLogged }: WorkoutModalProps
     const workout = workoutTypes.find(w => w.name === selectedWorkout);
     if (workout) {
       const calories = calculateCalories(workout.met, parseInt(duration));
-      onWorkoutLogged(calories);
+      onWorkoutLogged(workout.name, parseInt(duration), calories);
       setSelectedWorkout('');
       setDuration('');
       onOpenChange(false);
